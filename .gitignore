@@ -35,4 +35,9 @@ build/
 # Environment files
 .env
 .env.*
+target/
 BOOT-INF/
+.idea/
+.vscode/
+.env
+.env.*
