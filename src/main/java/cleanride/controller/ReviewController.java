@@ -13,7 +13,7 @@ import java.util.Objects;
 
 @RestController
 @RequestMapping("/api/reviews")
-@CrossOrigin(origins = {"http://localhost:5173", "http://localhost:5174", "http://localhost:5175", "https://cleanride-frontend.vercel.app"})
+@CrossOrigin(originPatterns = {"http://localhost:*", "https://*.vercel.app"})
 public class ReviewController {
 
     private final ReviewRepository reviewRepository;

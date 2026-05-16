@@ -38,12 +38,10 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
-        config.setAllowedOrigins(List.of(
-            "http://localhost:5173",
-            "http://localhost:5174",
-            "http://localhost:5175",
-            "https://cleanride-frontend.vercel.app"
-    ));
+        config.setAllowedOriginPatterns(List.of(
+            "http://localhost:*",
+            "https://*.vercel.app"
+        ));
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(List.of("*"));
         config.setAllowCredentials(true);
