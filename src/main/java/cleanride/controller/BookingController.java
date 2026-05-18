@@ -135,6 +135,23 @@ public class BookingController {
         return ResponseEntity.ok(Map.of("message", "Booking deleted successfully"));
     }
 
+
+    @PatchMapping("/{bookingId}/pay")
+    public ResponseEntity<?> markBookingPaid(@PathVariable Long bookingId) {
+        var bookingOptional = bookingRepository.findById(Objects.requireNonNull(bookingId));
+
+        if (bookingOptional.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+
+        var booking = bookingOptional.get();
+        if (booking.getStatus() == Booking.BookingStatus.CANCELLED) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Cancelled bookings cannot be paid"));
+        }
+
+        booking.setPaymentStatus(Booking.PaymentStatus.PAID);
+        return ResponseEntity.ok(bookingRepository.save(booking));
+    }
     @PutMapping("/{bookingId}/status")
     public ResponseEntity<?> updateBookingStatus(@PathVariable Long bookingId, @RequestParam Booking.BookingStatus status) {
         var bookingOptional = bookingRepository.findById(Objects.requireNonNull(bookingId));
@@ -144,6 +161,11 @@ public class BookingController {
         }
 
         var booking = bookingOptional.get();
+        if (status == Booking.BookingStatus.COMPLETED
+                && booking.getPaymentStatus() != Booking.PaymentStatus.PAID) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Cannot complete an unpaid booking"));
+        }
+
         if (isLockedAfterReview(booking)) {
             return ResponseEntity.badRequest().body(Map.of("error", "Reviewed completed bookings can no longer be changed"));
         }

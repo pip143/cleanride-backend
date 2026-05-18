@@ -259,6 +259,7 @@ public class ProviderController {
             List<Booking> bookings = getProviderBookings(providerId)
                     .stream()
                     .filter(b -> b.getStatus() == Booking.BookingStatus.COMPLETED)
+                    .filter(b -> b.getPaymentStatus() == Booking.PaymentStatus.PAID)
                     .collect(Collectors.toList());
 
             BigDecimal totalEarnings = bookings.stream()
@@ -271,7 +272,13 @@ public class ProviderController {
             earnings.put("totalEarnings", totalEarnings.doubleValue());
             earnings.put("thisMonthEarnings", monthEarnings.doubleValue());
             earnings.put("completedBookings", bookings.size());
-            earnings.put("pendingEarnings", 0.0);
+            BigDecimal pendingEarnings = getProviderBookings(providerId)
+                    .stream()
+                    .filter(b -> b.getPaymentStatus() == Booking.PaymentStatus.UNPAID)
+                    .filter(b -> b.getStatus() == Booking.BookingStatus.CONFIRMED || b.getStatus() == Booking.BookingStatus.COMPLETED)
+                    .map(b -> b.getService().getPrice())
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+            earnings.put("pendingEarnings", pendingEarnings.doubleValue());
             earnings.put("withdrawnEarnings", 0.0);
 
             return ResponseEntity.ok(earnings);
@@ -336,6 +343,7 @@ public class ProviderController {
             List<Booking> completedBookings = getProviderBookings(providerId)
                     .stream()
                     .filter(b -> b.getStatus() == Booking.BookingStatus.COMPLETED)
+                    .filter(b -> b.getPaymentStatus() == Booking.PaymentStatus.PAID)
                     .collect(Collectors.toList());
 
             BigDecimal balance = completedBookings.stream()
@@ -491,6 +499,11 @@ public class ProviderController {
         }
 
         Booking updatedBooking = booking.get();
+        if (status == Booking.BookingStatus.COMPLETED
+                && updatedBooking.getPaymentStatus() != Booking.PaymentStatus.PAID) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Cannot complete an unpaid booking"));
+        }
+
         if (updatedBooking.getStatus() == Booking.BookingStatus.COMPLETED
                 && reviewRepository.findByBookingId(updatedBooking.getId()).isPresent()) {
             return ResponseEntity.badRequest().body(Map.of("error", "Reviewed completed bookings can no longer be changed"));

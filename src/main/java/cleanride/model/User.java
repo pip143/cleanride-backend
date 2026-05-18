@@ -55,7 +55,7 @@ public class User {
     @UpdateTimestamp
     private LocalDateTime updatedAt;
 
-    public enum Role { CUSTOMER, PROVIDER, ADMIN, STAFF }
+    public enum Role { CUSTOMER, ADMIN, STAFF }
 
     public User() {}
 

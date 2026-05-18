@@ -39,12 +39,12 @@ public class UserService {
 
         User user = new User();
         
-        // Handle carwash name for providers
-        if ("provider".equalsIgnoreCase(request.getRole()) && request.getCarwashName() != null) {
-            user.setName(request.getCarwashName().trim());
-            user.setRole(User.Role.PROVIDER);
+        // Provider-facing accounts are stored as STAFF to match the project blueprint.
+        if (isProviderRegistration(request)) {
+            user.setName(getRegistrationName(request));
+            user.setRole(User.Role.STAFF);
         } else {
-            user.setName(request.getName().trim());
+            user.setName(getRegistrationName(request));
             user.setRole(User.Role.CUSTOMER);
         }
         
@@ -178,10 +178,21 @@ public class UserService {
         return response;
     }
 
-    private String toClientRole(User.Role role) {
-        if (role == User.Role.PROVIDER || role == User.Role.STAFF) {
-            return "PROVIDER";
+    private boolean isProviderRegistration(RegisterRequest request) {
+        return "provider".equalsIgnoreCase(request.getRole()) || "staff".equalsIgnoreCase(request.getRole());
+    }
+
+    private String getRegistrationName(RegisterRequest request) {
+        String value = request.getCarwashName() != null && !request.getCarwashName().trim().isEmpty()
+                ? request.getCarwashName()
+                : request.getName();
+        if (value == null || value.trim().isEmpty()) {
+            throw new IllegalArgumentException("Name is required");
         }
-        return "CUSTOMER";
+        return value.trim();
+    }
+
+    private String toClientRole(User.Role role) {
+        return role == User.Role.STAFF ? "STAFF" : role.name();
     }
 }
