@@ -197,7 +197,7 @@ public class ProviderController {
                     .filter(r -> bookings.stream().anyMatch(b -> b.getId().equals(r.getBooking().getId())))
                     .collect(Collectors.toList());
 
-            return ResponseEntity.ok(reviews);
+            return ResponseEntity.ok(reviews.stream().map(this::toProviderReviewResponse).toList());
         } catch (Exception e) {
             return ResponseEntity.internalServerError()
                     .body(Map.of("error", "Failed to load reviews"));
@@ -492,6 +492,25 @@ public class ProviderController {
         return booking.getAssignedStaff() == null;
     }
 
+    private Map<String, Object> toProviderReviewResponse(Review review) {
+        Booking booking = review.getBooking();
+        Service service = review.getService() != null ? review.getService() : booking.getService();
+        User customer = review.getUser() != null ? review.getUser() : booking.getUser();
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("id", review.getId());
+        response.put("bookingId", booking.getId());
+        response.put("customerId", customer == null ? null : customer.getId());
+        response.put("customerName", customer == null ? "Customer" : customer.getName());
+        response.put("serviceId", service == null ? null : service.getId());
+        response.put("serviceName", service == null ? "Service" : service.getName());
+        response.put("rating", review.getRating());
+        response.put("comment", review.getComment() == null ? "" : review.getComment());
+        response.put("createdAt", review.getCreatedAt());
+        response.put("updatedAt", review.getUpdatedAt());
+        response.put("bookingDate", booking.getBookingDate());
+        return response;
+    }
     private ResponseEntity<?> updateBookingStatus(Long bookingId, Booking.BookingStatus status) {
         Optional<Booking> booking = bookingRepository.findById(Objects.requireNonNull(bookingId));
         if (booking.isEmpty()) {
