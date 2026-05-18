@@ -201,6 +201,16 @@ public class BookingController {
         if (status != null && !status.isBlank()) {
             booking.setStatus(Booking.BookingStatus.valueOf(status.toUpperCase()));
         }
+
+        String paymentStatus = getStringValue(bookingData.get("paymentStatus"));
+        if (paymentStatus != null && !paymentStatus.isBlank()) {
+            booking.setPaymentStatus(Booking.PaymentStatus.valueOf(paymentStatus.toUpperCase()));
+        }
+
+        String paymentMethod = getStringValue(bookingData.get("paymentMethod"));
+        if ("CASH".equalsIgnoreCase(paymentMethod)) {
+            booking.setPaymentStatus(Booking.PaymentStatus.PAID);
+        }
     }
 
     private Long getLongValue(Object obj) {
